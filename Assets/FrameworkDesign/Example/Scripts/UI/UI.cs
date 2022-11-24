@@ -4,7 +4,6 @@ namespace FrameworkDesign.Example
 {
     public class UI : MonoBehaviour
     {
-        // Start is called before the first frame update
         void Start()
         {
             GamePassEvent.Register(OnGamePass);

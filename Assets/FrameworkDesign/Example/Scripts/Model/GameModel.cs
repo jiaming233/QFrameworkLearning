@@ -1,35 +1,33 @@
 namespace FrameworkDesign.Example
 {
-    public class GameModel
+    public interface IGameModel
     {
-        //第五课 表现和数据分离
-        /*
-        public static int KillCount = 0;
+        BindableProperty<int> KillCount { get; }
+        BindableProperty<int> Gold { get; }
+        BindableProperty<int> Score { get; }
+        BindableProperty<int> BestScore { get; }
+    }
 
-        public static int Gold = 0;
+    public class GameModel : IGameModel//: Singleton<GameModel>
+    {
+        //private GameModel() { }
 
-        public static int Score = 0;
-
-        public static int BestScore = 0;
-        */
-
-        //第八课 引入BindableProperty
-        public static BindableProperty<int> KillCount = new BindableProperty<int>
+        public BindableProperty<int> KillCount { get; } = new BindableProperty<int>
         {
             Value = 0
         };
 
-        public static BindableProperty<int> Gold = new BindableProperty<int>
+        public BindableProperty<int> Gold { get; } = new BindableProperty<int>
         {
             Value = 0
         };
 
-        public static BindableProperty<int> Score = new BindableProperty<int>
+        public BindableProperty<int> Score { get; } = new BindableProperty<int>
         {
             Value = 0
         };
 
-        public static BindableProperty<int> BestScore = new BindableProperty<int>
+        public BindableProperty<int> BestScore { get; } = new BindableProperty<int>
         {
             Value = 0
         };

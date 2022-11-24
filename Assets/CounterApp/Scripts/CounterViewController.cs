@@ -6,29 +6,16 @@ namespace CounterApp
 {
     public class CounterViewController : MonoBehaviour
     {
-        // Start is called before the first frame update
+        private ICounterModel mCounterModel;
         void Start()
         {
-            //使用委托的方式
-            //CounterModel.OnCountChanged += OnCountChanged;
-            CounterModel.Count.OnValueChanged += OnCountChanged;
-            //使用事件的方式
-            //OnCountChangedEvent.Register(OnCountChanged);
+            //CounterModel.Instance.Count.OnValueChanged += OnCountChanged;
+            mCounterModel = CounterApp.Get<ICounterModel>();
+            mCounterModel.Count.OnValueChanged += OnCountChanged;
 
-            /*
-            transform.Find("BtnAdd").GetComponent<Button>().onClick.AddListener(() =>
-            {
-                //交互逻辑
-                //CounterModel.Count++;
-                //表现逻辑
-                //UpdateView();
+            //主动调用一次
+            OnCountChanged(mCounterModel.Count.Value);
 
-                //交互逻辑 自动触发表现逻辑
-                CounterModel.Count.Value++;
-            });
-            */
-
-            //第九课 引入Command
             transform.Find("BtnAdd").GetComponent<Button>().onClick.AddListener(() =>
             {
                 new AddCountCommand().Execute();
@@ -40,12 +27,6 @@ namespace CounterApp
             });
         }
 
-        void UpdateView()
-        {
-            //方法调用的交互方式
-            transform.Find("CountText").GetComponent<Text>().text = CounterModel.Count.ToString();
-        }
-
         void OnCountChanged(int newCount)
         {
             transform.Find("CountText").GetComponent<Text>().text = newCount.ToString();
@@ -53,47 +34,66 @@ namespace CounterApp
 
         private void OnDestroy()
         {
-            //CounterModel.OnCountChanged -= OnCountChanged;
-            CounterModel.Count.OnValueChanged -= OnCountChanged;
-            //OnCountChangedEvent.UnRegister(OnCountChanged);
+            //CounterModel.Instance.Count.OnValueChanged -= OnCountChanged;
+            mCounterModel.Count.OnValueChanged -= OnCountChanged;
         }
     }
 
-    public static class CounterModel
+    public interface ICounterModel : IModel
     {
-        public static BindableProperty<int> Count = new BindableProperty<int>
+        BindableProperty<int> Count { get; }
+    }
+
+    public class CounterModel : ICounterModel//: Singleton<CounterModel>
+    {
+        //v1 singleton
+        //private CounterModel() { }
+
+        //v2 引入IOC
+        /*
+        public BindableProperty<int> Count = new BindableProperty<int>
         {
             Value = 0
         };
+        */
+
+        //v4 支持数据存储
         /*
-        private static int mCount = 0;
-
-        public static Action<int> OnCountChanged;
-
-        public static int Count
+        public CounterModel()
         {
-            get
-            {
-                return mCount;
-            }
-            set
-            {
-                if(value != mCount)
-                {
-                    mCount = value;
-
-                    OnCountChanged?.Invoke(mCount);
-
-                }
-            }
-        }
-
-
-        public class OnCountChangedEvent : Event<OnCountChangedEvent>
-        {
-            
+            var storage = CounterApp.Get<IStorage>();
+            Count.Value = storage.LoadInt("COUNTER_COUNT", 0);
+            Count.OnValueChanged += count => storage.SaveInt("COUNTER_COUNT", count);
         }
         */
+
+        //v5 替代构造方法
+        public void Init()
+        {
+            //CounterApp作为Architecture单例，Get时MakeSure
+            //初次调用会执行Init(), Init()在子类中进行模块注册
+            //CounterApp Init()中调用了CounterModel的构造方法
+            //造成了递归
+
+            //也就是说，是在尝试从Model中访问Utility层时出现的问题
+            //var storage = CounterApp.Get<IStorage>();
+            //绕开单例的初始化
+
+            //RegistModel传入CounterModel后才对Architecture赋值
+            var storage = Architecture.GetUtility<IStorage>();
+            Count.Value = storage.LoadInt("COUNTER_COUNT", 0);
+            Count.OnValueChanged += count => storage.SaveInt("COUNTER_COUNT", count);
+        }
+
+        //v3 IOC注册接口模块
+        public BindableProperty<int> Count { get; } = new BindableProperty<int>
+        {
+            Value = 0
+        };
+
+        public IArchitecture Architecture { get; set; }
+
+
     }
 }
 

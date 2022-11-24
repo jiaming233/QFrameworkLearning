@@ -10,7 +10,8 @@ namespace CounterApp
     {
         public void Execute()
         {
-            CounterModel.Count.Value++;
+            //CounterModel.Instance.Count.Value++;
+            CounterApp.Get<ICounterModel>().Count.Value++;
         }
     }
 }
